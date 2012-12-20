@@ -1,0 +1,215 @@
+<?php
+
+function mcraft_menu () {
+	$items['admin/config/media/mcraft']= array(
+		'title' => 'mcCraft Config',
+        'description' => 'mcCraft Configuration page',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('mcraft_conf_form'),
+        'access arguments' => array('access administration pages'),
+        'type' => MENU_NORMAL_ITEM,
+	);
+
+	$items['update/client']=array(
+		'title' => 'up_client',
+		'description' => 'update control',
+        'page callback' => 'update_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+	);
+
+  $items['update/server']=array(
+    'title' => 'up_server',
+    'description' => 'update control',
+        'page callback' => 'update_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['game/getversion']=array(
+    'title' => 'gm_getversion',
+    'description' => 'getversion',
+        'page callback' => 'getversion_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['game/joinserver']=array(
+    'title' => 'gm_joinserver',
+    'description' => 'joinserver',
+        'page callback' => 'joinserver_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['game/getskin']=array(
+    'title' => 'gm_getskin',
+    'description' => 'getskin',
+        'page callback' => 'getskin_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['game/getcape']=array(
+    'title' => 'gm_getcape',
+    'description' => 'getcape',
+        'page callback' => 'getcape_page',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+  );
+
+	return $items;
+}
+
+function mcraft_conf_form () {
+
+	$form['client_version'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Client Version'),
+      '#default_value' => variable_get('client_version', '3.8.0'),
+      '#description' => t('Latest launcher client version'),
+      '#required' => TRUE,
+  	);
+
+  	$form['server_version'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Server Version'),
+      '#default_value' => variable_get('server_version', '2.2'),
+      '#description' => t('Latest launcher server version'),
+      '#required' => TRUE,
+  	);
+
+  	$form['game_version'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Game Version'),
+      '#default_value' => variable_get('game_version', '1.3.2'),
+      '#description' => t('Latest game version'),
+      '#required' => TRUE,
+  	);
+
+  	$form['build_version'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Current Build'),
+      '#default_value' => variable_get('build_version', '1321653290000'),
+      '#description' => t('Current game build'),
+      '#required' => TRUE,
+  	);
+
+  	return system_settings_form($form);
+}
+
+/** UPDATE **/
+function update_page () {
+  $client_version=variable_get('client_version');
+  $server_version=variable_get('server_version');
+  $game_version=variable_get('game_version');
+  $build_version=variable_get('build_version');
+  $post=$_POST;
+
+  drupal_add_http_header ( 'Content-Type' ,  'text / html; charset = utf-8 ' );
+
+  $v=getUriVersion();
+  if(!$v){
+    echo $client_version;
+  }else{
+    if((float)$v>=(float)$client_version){
+      echo $client_version.':false:'.$game_version;
+    }else{
+      echo $client_version.':true:'.$game_version;
+    }
+    
+  }
+}
+
+/** GETVERSION **/
+function getversion_page (){
+  $client_version=variable_get('client_version');
+  $server_version=variable_get('server_version');
+  $game_version=variable_get('game_version');
+  $build_version=variable_get('build_version');
+  $post=$_POST;
+
+  drupal_add_http_header ( 'Content-Type' ,  'text / html; charset = utf-8 ' );
+  if (user_authenticate($post['user'], $post['password'])){
+  //if (user_authenticate($post['user'], $post['pass'])){
+    $sessid = generateSessionId();
+    // registrare sessid
+    echo $client_version.':randomtoken:'.$_POST['user'].':'.$sessid;
+  }else{
+    echo 'Bad login';
+  }
+}
+
+/** JOINSERVER **/
+function joinserver_page (){
+  drupal_add_http_header ( 'Content-Type' ,  'text / html; charset = utf-8 ' );
+  echo 'YES';
+}
+
+/** GETSKIN **/
+function getskin_page(){
+
+  $account=getUsername();
+  $fileuri=$account->field_skin['und'][0]['uri'];
+  $skin=file_create_url($fileuri);
+
+  drupal_add_http_header ('Content-Type' ,  'Content-Type: image/png');
+  drupal_add_http_header ('Content-Length' ,  filesize($skin));
+  drupal_add_http_header ('Content-Disposition' ,  'attachment; filename="'.$account->name.'.png"');
+
+  $fp=fopen($skin,'r');
+  fpassthru($fp);
+  fclose($fp);
+}
+
+/** GETCAPE**/
+function getcape_page(){
+
+  $account=getUsername();
+  $fileuri=$account->field_cape['und'][0]['uri'];
+  $cape=file_create_url($fileuri);
+
+  drupal_add_http_header ('Content-Type' ,  'Content-Type: image/png');
+  drupal_add_http_header ('Content-Length' ,  filesize($cape));
+  drupal_add_http_header ('Content-Disposition' ,  'attachment; filename="'.$account->name.'.png"');
+
+  $fp=fopen($cape,'r');
+  fpassthru($fp);
+  fclose($fp);
+}
+
+
+/** FUNZIONI UTILI AL PROCESSO **/
+function getUriVersion(){
+  $uri=$_SERVER['REQUEST_URI'];
+  $ex_uri=explode('/', $uri);
+  $ctrl=end($ex_uri);
+  if($ctrl!='client' or $ctrl!='server'){
+    return $ctrl;
+  }else{
+    return false;
+  }
+}
+
+function generateSessionId(){
+  $db=$GLOBALS["db"];
+    srand(time());
+    $randNum = rand(1000000000, 2147483647).rand(1000000000, 2147483647).rand(0,9);   
+    // controllare se già in uso
+    return $randNum;
+}
+
+function getUsername(){
+  $uri=$_SERVER['REQUEST_URI'];
+  $ex_uri=explode('/', $uri);
+  $user=end($ex_uri);
+  $account = user_load_by_name($user);
+  return $account;
+}
+?>

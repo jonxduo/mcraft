@@ -1,0 +1,13 @@
+name = mcraft
+description = A module for autentication in minecraft.
+package = mcCraft
+core = 7.x
+; files[] = menu_example.test
+
+configure = admin/config/media/mcraft
+
+; Information added by drupal.org packaging script on 2012-10-19
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "mcCraft"
+datestamp = "1350608089"
